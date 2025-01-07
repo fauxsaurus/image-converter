@@ -7,9 +7,18 @@ const INPUT_TEST_STRINGS = {
 	webp: 'data:image/webp;base64,UklGRhACAABXRUJQVlA4WAoAAAAwAAAAAAAAAAAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZBTFBIAgAAAAAAVlA4IBgAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v02aAA=',
 }
 
+const MIME_TYPES = {
+	avif: 'image/avif',
+	gif: 'image/gif',
+	jpeg: 'image/jpeg',
+	png: 'image/png',
+	svg: 'image/svg+xml',
+	webp: 'image/webp',
+}
+
 type IFormat = keyof typeof INPUT_TEST_STRINGS
 
-export type IFormatSupport = {type: IFormat; input: boolean; output: boolean}
+export type IFormatSupport = {name: IFormat; input: boolean; mimeType: string; output: boolean}
 
 const FILE_FORMATS = Object.keys(INPUT_TEST_STRINGS) as IFormat[]
 
@@ -31,9 +40,10 @@ const isOutputSupported = (imageFormat: IFormat) =>
 
 export const getSupportedFileFormats = async (): Promise<IFormatSupport[]> =>
 	Promise.all(
-		FILE_FORMATS.map(async type => ({
-			type,
-			input: await isInputSupported(type),
-			output: isOutputSupported(type),
+		FILE_FORMATS.map(async name => ({
+			name,
+			mimeType: MIME_TYPES[name],
+			input: await isInputSupported(name),
+			output: isOutputSupported(name),
 		}))
 	)

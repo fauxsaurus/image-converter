@@ -16,7 +16,7 @@ const App: Component = () => {
 			<FileUpload.Root
 				accept={supportedFormats()
 					.filter(format => format.input)
-					.map(format => format.type)}
+					.map(format => format.mimeType)}
 				allowDrop={true}
 				maxFiles={99}
 			>
