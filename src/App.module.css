@@ -1,0 +1,12 @@
+/* [data-scope='FileUpload'][data-part='item'] {
+	background: red
+  } */
+
+[data-scope='file-upload'] {
+	[data-part='dropzone'] {
+		background: red;
+	}
+}
+img {
+	max-width: 15rem;
+}
