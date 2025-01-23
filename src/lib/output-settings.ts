@@ -11,7 +11,13 @@ export type IOutputSettings = {
 	width: number
 }
 
-const DEFAULT_OUTPUT_SETTINGS: IOutputSettings = {bg: '', cq: 0.7, ext: 'jpeg', height: 0, width: 0}
+const DEFAULT_OUTPUT_SETTINGS: IOutputSettings = {
+	bg: '#ffffff',
+	cq: 0.7,
+	ext: 'jpeg',
+	height: 0,
+	width: 0,
+}
 
 const urlParams2json = (url: string) => {
 	const queryParams = new URLSearchParams(url)
@@ -33,7 +39,7 @@ const getFloat = (defaultValue: number, value = '') => (value && parseFloat(valu
 
 export const url2outputSettings = (url: string): IOutputSettings => {
 	/** @note no validation for bg as all invalid colors will be treated as black? */
-	const {bg = '', ...params} = urlParams2json(url)
+	const {bg = DEFAULT_OUTPUT_SETTINGS.bg, ...params} = urlParams2json(url)
 
 	const cq = clamp(0.01, 1, getFloat(DEFAULT_OUTPUT_SETTINGS.cq, params.cq))
 	const height = Math.max(getInt(DEFAULT_OUTPUT_SETTINGS.height, params.height), 0)
