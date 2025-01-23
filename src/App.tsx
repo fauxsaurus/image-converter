@@ -27,26 +27,93 @@ type IState = Record<
 	}
 >
 
+type IOutputSettings = {
+	bg: IColor
+	compressionQuality: number
+	extension: string
+	height: number
+	mimeType: string
+	width: number
+}
+
+const downloadFiles = (blobs: Record<string, Blob>) => {
+	const files = Object.entries(blobs)
+	if (files.length === 1) {
+		const [filename, blob] = files[0]
+		const url = URL.createObjectURL(blob)
+
+		Object.assign(document.createElement('a'), {href: url, download: filename}).click()
+
+		return void URL.revokeObjectURL(url)
+	}
+}
+
+const convert = async (output: IOutputSettings, file: File) => {
+	/** @note this is an 80/20 line of code that will alter the base name of an extenionless file that used dots to spearate parts (e.g., file.name = '2025.01.23.13.07') */
+	const newFileName = file.name.split('.').slice(0, -1).join('.') + `.${output.extension}`
+
+	const src = URL.createObjectURL(file)
+	const img = await new Promise<Event>((onload, onerror) =>
+		Object.assign(document.createElement('img'), {onload, onerror, src})
+	).then(event => event.currentTarget! as HTMLImageElement)
+	/** @todo add an error catcher and short circuit the function */
+
+	// input resolution
+	const iw = img.naturalWidth
+	const ih = img.naturalHeight
+	// ouput resolution
+	const ow = output.width || iw
+	const oh = output.height || ih
+
+	const canvas = Object.assign(document.createElement('canvas'), {width: ow, height: oh})
+	const context = canvas.getContext('2d')!
+
+	if (output.bg) Object.assign(context, {fillStyle: output.bg}).fillRect(0, 0, ow, oh)
+	context.drawImage(img, 0, 0, iw, ih, 0, 0, ow, oh)
+
+	return (
+		new Promise<Blob | null>(callback =>
+			canvas.toBlob(callback, output.mimeType, output.compressionQuality)
+		)
+			.then(blob => {
+				/** @todo do something here */
+				if (!blob) throw new Error('')
+
+				return {[newFileName]: blob}
+			})
+			/** @tood catch security error, bitmap not origin clean https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob#exceptions */
+			.finally(() => void URL.revokeObjectURL(src))
+	)
+}
+
+const Support = ({value}: {value: boolean}) => (
+	<span class="format-support" data-value={value}>
+		{value ? '✔' : '✘'}
+	</span>
+)
+
+/** @todo use https://web.dev/articles/offscreen-canvas to unlock better perfomance on the main thread (using it as a fallback in case it is not supported since the APIs are the same) */
 const App: Component = () => {
 	const [supportedFormats, setSupportedFormats] = createSignal<IFormatSupport[]>([])
-	const [state, setState] = createSignal<IState>({})
 
-	const outputFormats = () =>
-		supportedFormats()
-			.filter(format => format.output)
-			.map(format => format.name)
+	/** @todo add code to derrive all these from URL params with the given defaults */
+	const [outputFormat, setOuputFormat] = createSignal('jpeg')
+	const [outputHeight, setOutputHeight] = createSignal(0)
+	const [outputWidth, setOutputWidth] = createSignal(0)
+	const [outputCompressionQuality, setOutputCompressionQuality] = createSignal(0.7)
+	const [outputFallbackBgColor, setOutputFallbackBgColor] = createSignal('#ffffff')
 
-	const setOriginalResolution = (id: IUuid, width: number, height: number) =>
-		void setState(state =>
-			Object.assign({}, state, {
-				[id]: Object.assign({}, state[id], {
-					originalWidth: width,
-					originalHeight: height,
-					outputWidth: width,
-					outputHeight: height,
-				}),
-			})
-		)
+	const outputFormatMetadata = () =>
+		supportedFormats().find(format => format.extension === outputFormat())!
+
+	const outputSettings = () => ({
+		bg: outputFallbackBgColor(),
+		compressionQuality: outputCompressionQuality(),
+		extension: outputFormatMetadata().extension,
+		height: outputHeight(),
+		mimeType: outputFormatMetadata().mimeType,
+		width: outputWidth(),
+	})
 
 	const fileUpload = useFileUpload({
 		accept: supportedFormats()
@@ -56,38 +123,11 @@ const App: Component = () => {
 		maxFiles: 99,
 		onFileChange: async ({acceptedFiles: files}) => {
 			if (!files.length) return
-			const newState = await Promise.all(
-				files.map(file => {
-					const id = self.crypto.randomUUID()
-					const src = URL.createObjectURL(file)
-
-					new Promise<Event>((onload, onerror) =>
-						Object.assign(document.createElement('img'), {onload, onerror, src})
-					)
-						.then(event => event.currentTarget! as HTMLImageElement)
-						.then(image =>
-							setOriginalResolution(id, image.naturalWidth, image.naturalHeight)
-						)
-						.catch(error => console.error(error))
-
-					return {
-						[id]: {
-							id,
-							name: file.name,
-							src,
-							type: file.type,
-							originalWidth: 0,
-							originalHeight: 0,
-							ouptutType: 'image/jpeg',
-							outputWidth: 0,
-							outputHeight: 0,
-						},
-					}
-				})
-			)
-
-			setState(Object.assign({}, state(), ...newState))
 			fileUpload().clearFiles()
+
+			/** @todo support multiple files */
+
+			downloadFiles(await convert(outputSettings(), files[0]))
 		},
 	})
 
@@ -95,31 +135,7 @@ const App: Component = () => {
 		setSupportedFormats(await getSupportedFileFormats())
 	})
 
-	const convert = async (id: IUuid) => {
-		const {src, ...imageState} = state()[id]
-
-		const image = await new Promise<Event>((onload, onerror) =>
-			Object.assign(document.createElement('img'), {onload, onerror, src})
-		).then(event => event.currentTarget as HTMLImageElement)
-
-		const width = imageState.outputWidth
-		const height = imageState.outputHeight
-
-		const canvas = Object.assign(document.createElement('canvas'), {width, height})
-		const context = canvas.getContext('2d')!
-
-		if (imageState.backgroundColor) {
-			context.fillStyle = imageState.backgroundColor
-			context.fillRect(0, 0, width, height)
-		}
-
-		const sw = imageState.originalWidth
-		const sh = imageState.originalHeight
-
-		context.drawImage(image, 0, 0, sw, sh, 0, 0, width, height)
-
-		// new Promise(callback => canvas.toBlob(callback, , quality)).then(blob=>{if (!blob) throw Erorr(); })
-	}
+	/** @todo add a progress bar to this process */
 
 	return (
 		<div class={styles.App}>
@@ -129,34 +145,68 @@ const App: Component = () => {
 				<FileUpload.Trigger>Choose file(s)</FileUpload.Trigger>
 				<FileUpload.HiddenInput />
 			</FileUpload.RootProvider>
-			<ul>
-				<For each={Object.values(state())}>
-					{imageState => {
-						const {id} = imageState
-
-						return (
-							<li>
-								<button
-									onclick={event => {
-										event.preventDefault()
-										setState(({[id]: _state2remove, ...newState}) => newState)
-									}}
-								>
-									x
-								</button>
-								<img src={imageState.src} />
-								{imageState.name}
-								{imageState.size}
-								{imageState.originalWidth}x{imageState.originalHeight}
-								{imageState.type}
-								{imageState.outputWidth}x{imageState.outputHeight}
-								{/* dropdown that defaults to jpg */}
-								<button disabled>convert</button>
-							</li>
-						)
-					}}
+			Output Format
+			<select value="jpeg" onchange={event => setOuputFormat(event.target.value)}>
+				<For each={supportedFormats()}>
+					{format => (
+						<option
+							disabled={!format.output}
+							selected={format.extension === outputFormat()}
+						>
+							{format.extension}
+						</option>
+					)}
 				</For>
-			</ul>
+			</select>
+			{supportedFormats().map(format => (
+				<li>
+					<Support value={format.input} />
+					{format.extension}
+					<Support value={format.output} />
+				</li>
+			))}
+			<span>
+				Note: If the values below are set to zero, the output resolution will default to the
+				input images' resolution.
+			</span>{' '}
+			<br />
+			<input
+				type="number"
+				min="0"
+				value={outputWidth()}
+				onInput={event => setOutputWidth(event.target.valueAsNumber)}
+			/>{' '}
+			x{' '}
+			<input
+				type="number"
+				min="0"
+				value={outputHeight()}
+				onInput={event => setOutputHeight(event.target.valueAsNumber)}
+			/>
+			<br />
+			{outputFormatMetadata()?.compressible && (
+				<label>
+					Compression Quality{' '}
+					<input
+						type="number"
+						max="1"
+						min="0.01"
+						value={outputCompressionQuality()}
+						onInput={event => setOutputCompressionQuality(event.target.valueAsNumber)}
+					/>
+				</label>
+			)}
+			{/* @todo white, black, custom */}
+			{!outputFormatMetadata()?.transparency && (
+				<label>
+					Transparency Not Supported. Fallback background Color{' '}
+					<input
+						onchange={event => setOutputFallbackBgColor(event.currentTarget.value)}
+						type="color"
+						value={outputFallbackBgColor()}
+					/>
+				</label>
+			)}
 		</div>
 	)
 }
