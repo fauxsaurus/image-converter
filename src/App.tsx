@@ -1,18 +1,14 @@
 import {Component, For, createSignal, onMount} from 'solid-js'
 import {FileUpload, useFileUpload} from '@ark-ui/solid/file-upload'
-import {formatMetadata, getSupportedFileFormats, IFormatSupport} from './lib'
-
+import {
+	formatMetadata,
+	getSupportedFileFormats,
+	IExt,
+	IFormatSupport,
+	IOutputSettings,
+	url2outputSettings,
+} from './lib/'
 import styles from './App.module.css'
-
-type IColor = string
-type IOutputSettings = {
-	/** @note new background color (empty string = transparent) */
-	bg: IColor
-	compressionQuality: number
-	extension: IFormatSupport['extension']
-	height: number
-	width: number
-}
 
 const downloadFiles = (blobs: Record<string, Blob>) => {
 	const files = Object.entries(blobs)
@@ -30,7 +26,7 @@ const downloadFiles = (blobs: Record<string, Blob>) => {
 
 const convert = async (output: IOutputSettings, file: File) => {
 	/** @note this is an 80/20 line of code that will alter the base name of an extenionless file that used dots to spearate parts (e.g., file.name = '2025.01.23.13.07') */
-	const newFileName = file.name.split('.').slice(0, -1).join('.') + `.${output.extension}`
+	const newFileName = file.name.split('.').slice(0, -1).join('.') + `.${output.ext}`
 
 	// LOAD IMAGE
 	const src = URL.createObjectURL(file)
@@ -57,11 +53,7 @@ const convert = async (output: IOutputSettings, file: File) => {
 	// OUTPUT FILE
 	return (
 		new Promise<Blob | null>(callback =>
-			canvas.toBlob(
-				callback,
-				formatMetadata[output.extension].mimeType,
-				output.compressionQuality
-			)
+			canvas.toBlob(callback, formatMetadata[output.ext].mimeType, output.cq)
 		)
 			.then(blob => {
 				/** @todo do something here */
@@ -84,14 +76,9 @@ const Support = ({value}: {value: boolean}) => (
 /** @todo use https://web.dev/articles/offscreen-canvas to unlock better perfomance on the main thread (using it as a fallback in case it is not supported since the APIs are the same) */
 const App: Component = () => {
 	const [supportedFormats, setSupportedFormats] = createSignal<IFormatSupport[]>([])
-	/** @todo add code to derrive all these from URL params with the given defaults */
-	const [outputSettings, setOutputSettings] = createSignal<IOutputSettings>({
-		bg: '',
-		compressionQuality: 0.7,
-		extension: 'jpeg',
-		height: 0,
-		width: 0,
-	})
+	const [outputSettings, setOutputSettings] = createSignal(
+		url2outputSettings(window.location.search)
+	)
 
 	const adjustOuputSetting = (newProp: Partial<IOutputSettings>) =>
 		setOutputSettings(Object.assign({}, outputSettings(), newProp))
@@ -131,7 +118,7 @@ const App: Component = () => {
 				value="jpeg"
 				onchange={event =>
 					adjustOuputSetting({
-						extension: event.target.value as IFormatSupport['extension'],
+						ext: event.target.value as IExt,
 					})
 				}
 			>
@@ -139,9 +126,9 @@ const App: Component = () => {
 					{format => (
 						<option
 							disabled={!format.output}
-							selected={format.extension === outputSettings().extension}
+							selected={format.ext === outputSettings().ext}
 						>
-							{format.extension}
+							{format.ext}
 						</option>
 					)}
 				</For>
@@ -149,7 +136,7 @@ const App: Component = () => {
 			{supportedFormats().map(format => (
 				<li>
 					<Support value={format.input} />
-					{format.extension}
+					{format.ext}
 					<Support value={format.output} />
 				</li>
 			))}
@@ -181,17 +168,17 @@ const App: Component = () => {
 			/>
 			<br />
 			{/* @ts-ignore it is fine to access a potentially non-existent property here */}
-			{!!formatMetadata[outputSettings().extension]?.compressible && (
+			{!!formatMetadata[outputSettings().ext]?.compressible && (
 				<label>
 					Compression Quality{' '}
 					<input
 						type="number"
 						max="1"
 						min="0.01"
-						value={outputSettings().compressionQuality}
+						value={outputSettings().cq}
 						onInput={event =>
 							adjustOuputSetting({
-								compressionQuality: event.target.valueAsNumber,
+								cq: event.target.valueAsNumber,
 							})
 						}
 					/>
@@ -200,7 +187,7 @@ const App: Component = () => {
 			{/* @todo make this work even if the format supports transparency */}
 			{/* @todo white, black, custom */}
 			{/* @ts-ignore it is fine to access a potentially non-existent property here */}
-			{!formatMetadata[outputSettings().extension]?.transparency && (
+			{!formatMetadata[outputSettings().ext]?.transparency && (
 				<label>
 					Transparency Not Supported. Fallback background Color{' '}
 					<input
