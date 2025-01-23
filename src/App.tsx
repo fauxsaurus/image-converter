@@ -1,6 +1,7 @@
 import {Component, For, createSignal, onMount} from 'solid-js'
 import {FileUpload, useFileUpload} from '@ark-ui/solid/file-upload'
 import {
+	downloadFiles,
 	formatMetadata,
 	getSupportedFileFormats,
 	IExt,
@@ -9,20 +10,6 @@ import {
 	url2outputSettings,
 } from './lib/'
 import styles from './App.module.css'
-
-const downloadFiles = (blobs: Record<string, Blob>) => {
-	const files = Object.entries(blobs)
-	if (files.length === 1) {
-		const [filename, blob] = files[0]
-		const url = URL.createObjectURL(blob)
-
-		Object.assign(document.createElement('a'), {href: url, download: filename}).click()
-
-		return void URL.revokeObjectURL(url)
-	}
-
-	/** @todo client-side JS code to downlaod multiple files as a zip */
-}
 
 const convert = async (output: IOutputSettings, file: File) => {
 	/** @note this is an 80/20 line of code that will alter the base name of an extenionless file that used dots to spearate parts (e.g., file.name = '2025.01.23.13.07') */
@@ -59,7 +46,7 @@ const convert = async (output: IOutputSettings, file: File) => {
 				/** @todo do something here */
 				if (!blob) throw new Error('')
 
-				return {[newFileName]: blob}
+				return [newFileName, blob] as [string, Blob]
 			})
 			/** @tood catch security error, bitmap not origin clean https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob#exceptions */
 			.finally(() => void URL.revokeObjectURL(src))
@@ -93,9 +80,7 @@ const App: Component = () => {
 			if (!files.length) return
 			fileUpload().clearFiles()
 
-			/** @todo support multiple files */
-
-			downloadFiles(await convert(outputSettings(), files[0]))
+			downloadFiles(await Promise.all(files.map(file => convert(outputSettings(), file))))
 		},
 	})
 
