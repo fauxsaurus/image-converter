@@ -5,28 +5,6 @@ import {getSupportedFileFormats, IFormatSupport} from './lib'
 import styles from './App.module.css'
 
 type IColor = string
-type IUuid = string
-type IUrl = string
-type IState = Record<
-	IUuid,
-	{
-		id: IUuid
-		src: IUrl
-		size: number
-		name: string
-		type: IFormatSupport['mimeType']
-		originalWidth: number
-		originalHeight: number
-
-		outputType: IFormatSupport['mimeType']
-		outputWidth: number
-		outputHeight: number
-
-		backgroundColor?: IColor
-		outputQuality?: number
-	}
->
-
 type IOutputSettings = {
 	bg: IColor
 	compressionQuality: number
