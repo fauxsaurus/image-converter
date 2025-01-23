@@ -11,7 +11,7 @@ const INPUT_TEST_STRINGS = {
 }
 
 /** @todo try to add ico support https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob#convert_a_canvas_to_an_ico_mozilla_only */
-const formatMetadata = {
+export const formatMetadata = {
 	avif: {mimeType: 'image/avif', transparency: true},
 	bmp: {mimeType: 'image/bmp', transparency: true},
 	gif: {mimeType: 'image/gif', transparency: true},

@@ -1,16 +1,16 @@
 import {Component, For, createSignal, onMount} from 'solid-js'
 import {FileUpload, useFileUpload} from '@ark-ui/solid/file-upload'
-import {getSupportedFileFormats, IFormatSupport} from './lib'
+import {formatMetadata, getSupportedFileFormats, IFormatSupport} from './lib'
 
 import styles from './App.module.css'
 
 type IColor = string
 type IOutputSettings = {
+	/** @note new background color (empty string = transparent) */
 	bg: IColor
 	compressionQuality: number
-	extension: string
+	extension: IFormatSupport['extension']
 	height: number
-	mimeType: string
 	width: number
 }
 
@@ -24,12 +24,15 @@ const downloadFiles = (blobs: Record<string, Blob>) => {
 
 		return void URL.revokeObjectURL(url)
 	}
+
+	/** @todo client-side JS code to downlaod multiple files as a zip */
 }
 
 const convert = async (output: IOutputSettings, file: File) => {
 	/** @note this is an 80/20 line of code that will alter the base name of an extenionless file that used dots to spearate parts (e.g., file.name = '2025.01.23.13.07') */
 	const newFileName = file.name.split('.').slice(0, -1).join('.') + `.${output.extension}`
 
+	// LOAD IMAGE
 	const src = URL.createObjectURL(file)
 	const img = await new Promise<Event>((onload, onerror) =>
 		Object.assign(document.createElement('img'), {onload, onerror, src})
@@ -43,15 +46,22 @@ const convert = async (output: IOutputSettings, file: File) => {
 	const ow = output.width || iw
 	const oh = output.height || ih
 
+	// SETUP CANVAS
 	const canvas = Object.assign(document.createElement('canvas'), {width: ow, height: oh})
 	const context = canvas.getContext('2d')!
 
+	// DRAW
 	if (output.bg) Object.assign(context, {fillStyle: output.bg}).fillRect(0, 0, ow, oh)
 	context.drawImage(img, 0, 0, iw, ih, 0, 0, ow, oh)
 
+	// OUTPUT FILE
 	return (
 		new Promise<Blob | null>(callback =>
-			canvas.toBlob(callback, output.mimeType, output.compressionQuality)
+			canvas.toBlob(
+				callback,
+				formatMetadata[output.extension].mimeType,
+				output.compressionQuality
+			)
 		)
 			.then(blob => {
 				/** @todo do something here */
@@ -70,28 +80,21 @@ const Support = ({value}: {value: boolean}) => (
 	</span>
 )
 
+/** @todo allow transparent formats to change their background color with bg (in this case default to white if set to '' on jpeg) */
 /** @todo use https://web.dev/articles/offscreen-canvas to unlock better perfomance on the main thread (using it as a fallback in case it is not supported since the APIs are the same) */
 const App: Component = () => {
 	const [supportedFormats, setSupportedFormats] = createSignal<IFormatSupport[]>([])
-
 	/** @todo add code to derrive all these from URL params with the given defaults */
-	const [outputFormat, setOuputFormat] = createSignal('jpeg')
-	const [outputHeight, setOutputHeight] = createSignal(0)
-	const [outputWidth, setOutputWidth] = createSignal(0)
-	const [outputCompressionQuality, setOutputCompressionQuality] = createSignal(0.7)
-	const [outputFallbackBgColor, setOutputFallbackBgColor] = createSignal('#ffffff')
-
-	const outputFormatMetadata = () =>
-		supportedFormats().find(format => format.extension === outputFormat())!
-
-	const outputSettings = () => ({
-		bg: outputFallbackBgColor(),
-		compressionQuality: outputCompressionQuality(),
-		extension: outputFormatMetadata().extension,
-		height: outputHeight(),
-		mimeType: outputFormatMetadata().mimeType,
-		width: outputWidth(),
+	const [outputSettings, setOutputSettings] = createSignal<IOutputSettings>({
+		bg: '',
+		compressionQuality: 0.7,
+		extension: 'jpeg',
+		height: 0,
+		width: 0,
 	})
+
+	const adjustOuputSetting = (newProp: Partial<IOutputSettings>) =>
+		setOutputSettings(Object.assign({}, outputSettings(), newProp))
 
 	const fileUpload = useFileUpload({
 		accept: supportedFormats()
@@ -124,12 +127,19 @@ const App: Component = () => {
 				<FileUpload.HiddenInput />
 			</FileUpload.RootProvider>
 			Output Format
-			<select value="jpeg" onchange={event => setOuputFormat(event.target.value)}>
+			<select
+				value="jpeg"
+				onchange={event =>
+					adjustOuputSetting({
+						extension: event.target.value as IFormatSupport['extension'],
+					})
+				}
+			>
 				<For each={supportedFormats()}>
 					{format => (
 						<option
 							disabled={!format.output}
-							selected={format.extension === outputFormat()}
+							selected={format.extension === outputSettings().extension}
 						>
 							{format.extension}
 						</option>
@@ -151,37 +161,52 @@ const App: Component = () => {
 			<input
 				type="number"
 				min="0"
-				value={outputWidth()}
-				onInput={event => setOutputWidth(event.target.valueAsNumber)}
+				value={outputSettings().width}
+				onInput={event =>
+					adjustOuputSetting({
+						width: event.target.valueAsNumber,
+					})
+				}
 			/>{' '}
 			x{' '}
 			<input
 				type="number"
 				min="0"
-				value={outputHeight()}
-				onInput={event => setOutputHeight(event.target.valueAsNumber)}
+				value={outputSettings().height}
+				onInput={event =>
+					adjustOuputSetting({
+						height: event.target.valueAsNumber,
+					})
+				}
 			/>
 			<br />
-			{outputFormatMetadata()?.compressible && (
+			{/* @ts-ignore it is fine to access a potentially non-existent property here */}
+			{!!formatMetadata[outputSettings().extension]?.compressible && (
 				<label>
 					Compression Quality{' '}
 					<input
 						type="number"
 						max="1"
 						min="0.01"
-						value={outputCompressionQuality()}
-						onInput={event => setOutputCompressionQuality(event.target.valueAsNumber)}
+						value={outputSettings().compressionQuality}
+						onInput={event =>
+							adjustOuputSetting({
+								compressionQuality: event.target.valueAsNumber,
+							})
+						}
 					/>
 				</label>
 			)}
+			{/* @todo make this work even if the format supports transparency */}
 			{/* @todo white, black, custom */}
-			{!outputFormatMetadata()?.transparency && (
+			{/* @ts-ignore it is fine to access a potentially non-existent property here */}
+			{!formatMetadata[outputSettings().extension]?.transparency && (
 				<label>
 					Transparency Not Supported. Fallback background Color{' '}
 					<input
-						onchange={event => setOutputFallbackBgColor(event.currentTarget.value)}
+						onchange={event => adjustOuputSetting({bg: event.currentTarget.value})}
 						type="color"
-						value={outputFallbackBgColor()}
+						value={outputSettings().bg}
 					/>
 				</label>
 			)}
