@@ -12,7 +12,7 @@ export type IOutputSettings = {
 }
 
 const DEFAULT_OUTPUT_SETTINGS: IOutputSettings = {
-	bg: '#ffffff',
+	bg: 'transparent',
 	cq: 0.7,
 	ext: 'jpeg',
 	height: 0,

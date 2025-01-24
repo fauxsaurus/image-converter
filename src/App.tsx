@@ -10,6 +10,7 @@ import {
 	url2outputSettings,
 } from './lib/'
 import styles from './App.module.css'
+import {ColorSelection} from './color-select'
 
 const convert = async (output: IOutputSettings, file: File) => {
 	/** @note this is an 80/20 line of code that will alter the base name of an extenionless file that used dots to spearate parts (e.g., file.name = '2025.01.23.13.07') */
@@ -29,15 +30,15 @@ const convert = async (output: IOutputSettings, file: File) => {
 	const ow = output.width || iw
 	const oh = output.height || ih
 
-	// SETUP CANVAS
+	// DRAW IMAGE
 	const canvas = Object.assign(document.createElement('canvas'), {width: ow, height: oh})
 	const context = canvas.getContext('2d')!
 
-	// DRAW
-	if (output.bg) Object.assign(context, {fillStyle: output.bg}).fillRect(0, 0, ow, oh)
+	if (output.bg !== 'transparent')
+		Object.assign(context, {fillStyle: output.bg}).fillRect(0, 0, ow, oh)
 	context.drawImage(img, 0, 0, iw, ih, 0, 0, ow, oh)
 
-	// OUTPUT FILE
+	// OUTPUT IMAGE
 	return (
 		new Promise<Blob | null>(callback =>
 			canvas.toBlob(callback, formatMetadata[output.ext].mimeType, output.cq)
@@ -80,9 +81,22 @@ const App: Component = () => {
 			if (!files.length) return
 			fileUpload().clearFiles()
 
-			downloadFiles(await Promise.all(files.map(file => convert(outputSettings(), file))))
+			const actingOutputSettings = Object.assign({}, outputSettings(), {bg: actingBg()})
+
+			await downloadFiles(
+				await Promise.all(files.map(file => convert(actingOutputSettings, file)))
+			)
 		},
 	})
+
+	// @ts-ignore yes, we can check if the transparency property exists
+	const allowsTransparency = () => !!formatMetadata[outputSettings().ext]?.transparency
+	/** @note the fallback color to use if a transparent background is selected but not allowed */
+	const actingBg = () => {
+		const setColor = outputSettings().bg
+		if (allowsTransparency() || setColor !== 'transparent') return setColor
+		return '#ffffff'
+	}
 
 	onMount(async () => {
 		setSupportedFormats(await getSupportedFileFormats())
@@ -169,19 +183,16 @@ const App: Component = () => {
 					/>
 				</label>
 			)}
-			{/* @todo make this work even if the format supports transparency */}
-			{/* @todo white, black, custom */}
-			{/* @ts-ignore it is fine to access a potentially non-existent property here */}
-			{!formatMetadata[outputSettings().ext]?.transparency && (
-				<label>
-					Transparency Not Supported. Fallback background Color{' '}
-					<input
-						onchange={event => adjustOuputSetting({bg: event.currentTarget.value})}
-						type="color"
-						value={outputSettings().bg}
-					/>
-				</label>
-			)}
+			Background Color
+			{/* @todo support alpha channels on bg colors */}
+			<ColorSelection
+				disableTransparency={!allowsTransparency()}
+				defaultValue="#cc3333"
+				onchange={bg => adjustOuputSetting({bg})}
+				value={actingBg()}
+			/>
+			{!allowsTransparency() &&
+				`Note: ${outputSettings().ext} files do not support transparency.`}
 		</div>
 	)
 }
