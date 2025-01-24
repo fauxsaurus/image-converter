@@ -110,9 +110,10 @@ const App: Component = () => {
 	return (
 		<div class={styles.App}>
 			<FileUpload.RootProvider value={fileUpload}>
-				<FileUpload.Label>File Upload</FileUpload.Label>
-				<FileUpload.Dropzone>Drag your file(s) here</FileUpload.Dropzone>
-				<FileUpload.Trigger>Choose file(s)</FileUpload.Trigger>
+				<FileUpload.Dropzone>
+					{/* !mobile && Drag and Drop  */}
+					<FileUpload.Trigger>Choose Images(s)</FileUpload.Trigger>
+				</FileUpload.Dropzone>
 				<FileUpload.HiddenInput />
 			</FileUpload.RootProvider>
 			Output Format
