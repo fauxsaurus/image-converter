@@ -102,8 +102,11 @@ const App: Component = () => {
 		setSupportedFormats(await getSupportedFileFormats())
 	})
 
-	/** @todo add a progress bar to this process */
+	/** @todo expand the drag and drop area, center the file button (vertically/horizontally), add colored checkmarks, improve the resolution layout bit, improve compression quality with a tooltip, improve the backgrond color layout, sizing, color swatches, and make a clear indicator of an editable/custom color */
 
+	/** @todo add error handling to all the async functions used */
+	/** @todo +Privacy First Notice and intuative instructions with good SEO */
+	/** @todo add a spanish localization */
 	return (
 		<div class={styles.App}>
 			<FileUpload.RootProvider value={fileUpload}>
