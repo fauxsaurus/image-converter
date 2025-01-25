@@ -2,6 +2,7 @@ import {Component, For, createSignal, onMount} from 'solid-js'
 import {FileUpload, useFileUpload} from '@ark-ui/solid/file-upload'
 import {
 	downloadFiles,
+	exts2cssBg,
 	formatMetadata,
 	getSupportedFileFormats,
 	IExt,
@@ -54,12 +55,6 @@ const convert = async (output: IOutputSettings, file: File) => {
 	)
 }
 
-const Support = ({value}: {value: boolean}) => (
-	<span class="format-support" data-value={value}>
-		{value ? '✔' : '✘'}
-	</span>
-)
-
 /** @todo allow transparent formats to change their background color with bg (in this case default to white if set to '' on jpeg) */
 /** @todo use https://web.dev/articles/offscreen-canvas to unlock better perfomance on the main thread (using it as a fallback in case it is not supported since the APIs are the same) */
 const App: Component = () => {
@@ -98,17 +93,25 @@ const App: Component = () => {
 		return '#ffffff'
 	}
 
-	onMount(async () => {
-		setSupportedFormats(await getSupportedFileFormats())
-	})
+	const iconBg = () =>
+		exts2cssBg(
+			supportedFormats()
+				.filter(format => format.input)
+				.map(format => format.ext),
+			'#ccc'
+		)
 
-	/** @todo expand the drag and drop area, center the file button (vertically/horizontally), add colored checkmarks, improve the resolution layout bit, improve compression quality with a tooltip, improve the backgrond color layout, sizing, color swatches, and make a clear indicator of an editable/custom color */
+	onMount(async () => void setSupportedFormats(await getSupportedFileFormats()))
 
+	/** @todo  improve the resolution layout bit, improve compression quality with a tooltip, improve the backgrond color layout, sizing, color swatches, and make a clear indicator of an editable/custom color */
+	/** @todo add drag and drop hover styles*/
+	/** @todo check accessibility on the image conversion (e.g., what file formats are supported? And do screen readers conveniently convey that?) */
 	/** @todo add error handling to all the async functions used */
 	/** @todo +Privacy First Notice and intuative instructions with good SEO */
-	/** @todo add a spanish localization */
+	/** @todo add spanish localization */
 	return (
 		<div class={styles.App}>
+			<style>{`[data-part="dropzone"]{background: ${iconBg()}}`}</style>
 			<FileUpload.RootProvider value={fileUpload}>
 				<FileUpload.Dropzone>
 					{/* !mobile && Drag and Drop  */}
@@ -136,13 +139,6 @@ const App: Component = () => {
 					)}
 				</For>
 			</select>
-			{supportedFormats().map(format => (
-				<li>
-					<Support value={format.input} />
-					{format.ext}
-					<Support value={format.output} />
-				</li>
-			))}
 			<span>
 				Note: If the values below are set to zero, the output resolution will default to the
 				input images' resolution.
