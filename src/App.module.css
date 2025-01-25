@@ -28,7 +28,7 @@
 			to bottom,
 			var(--color-button-fx) 0%,
 			var(--color-button-fx) 1.8rem,
-			#2222 1.8rem
+			#0004 1.8rem
 		);
 		border: none;
 		color: var(--color-white);
@@ -45,7 +45,7 @@
 	}
 
 	[data-part='trigger']:focus {
-		--color-button-fx: #2222;
+		--color-button-fx: #0004;
 		cursor: pointer;
 		outline: none;
 		transform: scale(1, 0.9) translate(0, 0.2rem);
