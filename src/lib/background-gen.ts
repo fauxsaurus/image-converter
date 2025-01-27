@@ -1,4 +1,4 @@
-export const ext2svgIconString = (ext: string, color) =>
+export const ext2svgIconString = (ext: string, color: string) =>
 	`<svg height="1000" width="1000" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
 		<style>
 			text {
@@ -46,13 +46,44 @@ export const svgText2cssBg = (svg: string) =>
 		.replace(/\s{2,}/g, ` `)
 		.replace(/[\r\n%#()<>?[\\\]^`{|}]/g, encodeURIComponent)}')`
 
-export const exts2cssBg = (exts: string[], color = 'black') =>
-	exts
-		.map((ext, i) => {
+export const exts2cssBg = (exts: string[]) => {
+	if (!exts.length) return ''
+
+	const positions = [
+		[2.5, 95],
+		[95, 5],
+		[97.5, 97.5],
+		[90, 70],
+		[85, 35],
+		[31.5, 100],
+		[20, 80],
+		[70, 17.5],
+		[57.5, 85],
+		[105, 25],
+		[75, 95],
+		[30, 65],
+		[52.5, 32.5],
+		[45, 72.5],
+		[65, 62.5],
+		[100, 52.5],
+		[50, 105],
+		[107.5, 82.5],
+	]
+
+	const colors = ['#ccc', '#fcc', '#fcc', '#ccc']
+
+	return positions
+		.map(([x, y], i) => {
+			const ext = exts[i % exts.length]
+			const color = colors[i % colors.length]
 			const bgImage = svgText2cssBg(ext2svgIconString(ext, color))
-			const bgPosition = `${i * 100}px ${i * 100}px`
-			const bgSize = '100px auto'
+
+			const bgPosition = `${x}% ${y}%`
+
+			const size = i % 2 ? 12.5 : 10
+			const bgSize = `${size}vmin auto`
 
 			return [bgImage, [bgPosition, bgSize].join(' / '), 'no-repeat'].join(' ')
 		})
 		.join(', ')
+}

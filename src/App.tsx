@@ -97,8 +97,7 @@ const App: Component = () => {
 		exts2cssBg(
 			supportedFormats()
 				.filter(format => format.input)
-				.map(format => format.ext),
-			'#ccc'
+				.map(format => format.ext)
 		)
 
 	onMount(async () => void setSupportedFormats(await getSupportedFileFormats()))
