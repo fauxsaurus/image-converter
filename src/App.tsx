@@ -102,6 +102,7 @@ const App: Component = () => {
 
 	onMount(async () => void setSupportedFormats(await getSupportedFileFormats()))
 
+	/** @todo improve the convert to dropdown, put the label over the button (left aligned) and absolutely position them over the dropzone */
 	/** @todo  improve the resolution layout bit, improve compression quality with a tooltip, improve the backgrond color layout, sizing, color swatches, and make a clear indicator of an editable/custom color */
 	/** @todo add drag and drop hover styles*/
 	/** @todo check accessibility on the image conversion (e.g., what file formats are supported? And do screen readers conveniently convey that?) */
@@ -113,35 +114,39 @@ const App: Component = () => {
 			<style>{`[data-part="dropzone"]{background: ${iconBg()}}`}</style>
 			<FileUpload.RootProvider value={fileUpload}>
 				<FileUpload.Dropzone>
-					{/* !mobile && Drag and Drop  */}
+					{/* if mobile, make this text transparent */}
+					<FileUpload.Label>Drag and Drop File(s)</FileUpload.Label>
 					<FileUpload.Trigger>Choose Images(s)</FileUpload.Trigger>
+					<div>
+						<label for="output-format" onclick={event => event.stopPropagation()}>
+							Convert To
+						</label>
+						<br />
+						<select
+							id="output-format"
+							onclick={event => event.stopPropagation()}
+							onchange={event =>
+								adjustOuputSetting({ext: event.target.value as IExt})
+							}
+							value={outputSettings().ext}
+						>
+							<For each={supportedFormats().filter(format => format.output)}>
+								{format => (
+									<option selected={format.ext === outputSettings().ext}>
+										{format.ext}
+									</option>
+								)}
+							</For>
+						</select>
+					</div>
 				</FileUpload.Dropzone>
 				<FileUpload.HiddenInput />
 			</FileUpload.RootProvider>
-			Output Format
-			<select
-				value="jpeg"
-				onchange={event =>
-					adjustOuputSetting({
-						ext: event.target.value as IExt,
-					})
-				}
-			>
-				<For each={supportedFormats()}>
-					{format => (
-						<option
-							disabled={!format.output}
-							selected={format.ext === outputSettings().ext}
-						>
-							{format.ext}
-						</option>
-					)}
-				</For>
-			</select>
+			<br />
 			<span>
 				Note: If the values below are set to zero, the output resolution will default to the
 				input images' resolution.
-			</span>{' '}
+			</span>
 			<br />
 			<input
 				type="number"
