@@ -57,6 +57,8 @@ const convert = async (output: IOutputSettings, file: File) => {
 /** @todo allow transparent formats to change their background color with bg (in this case default to white if set to '' on jpeg) */
 /** @todo use https://web.dev/articles/offscreen-canvas to unlock better perfomance on the main thread (using it as a fallback in case it is not supported since the APIs are the same) */
 const App: Component = () => {
+	const [showSettings, setShowSettings] = createSignal(false)
+
 	const [supportedFormats, setSupportedFormats] = createSignal<IFormatSupport[]>([])
 	const [outputSettings, setOutputSettings] = createSignal(
 		url2outputSettings(window.location.search)
@@ -109,9 +111,9 @@ const App: Component = () => {
 	/** @todo +Privacy First Notice and intuative instructions with good SEO */
 	/** @todo add spanish localization */
 	return (
-		<>
+		<main data-settings-menu={showSettings()}>
 			<header>
-				<h1>Image Converter</h1>
+				<h1 onclick={() => setShowSettings(!showSettings())}>☰ Image Converter</h1>
 			</header>
 			<aside>
 				<fieldset>
@@ -207,7 +209,7 @@ const App: Component = () => {
 				</FileUpload.Dropzone>
 				<FileUpload.HiddenInput />
 			</FileUpload.RootProvider>
-		</>
+		</main>
 	)
 }
 
