@@ -37,14 +37,24 @@ header {
 	}
 }
 aside {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
 	grid-area: 2 / 1 / 3 / 2;
+	padding: 0.5rem;
+}
 
-	label {
-		display: flex;
-		flex-direction: column;
+fieldset {
+	legend {
+		font-size: 1.125rem;
+		text-indent: -0.25rem;
 	}
 }
 
+label {
+	display: flex;
+	flex-direction: column;
+}
 [data-scope='file-upload'][data-part='root'] {
 	display: flex;
 	grid-area: 2 / 2 / 3 / 3;

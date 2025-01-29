@@ -145,11 +145,10 @@ const App: Component = () => {
 						px
 					</div>
 				</fieldset>
-				<br />
 				{/* @ts-ignore it is fine to access a potentially non-existent property here */}
 				{!!formatMetadata[outputSettings().ext]?.compressible && (
-					<label>
-						Compression Quality{' '}
+					<fieldset>
+						<legend>Compression Quality</legend>
 						<input
 							type="number"
 							max="1"
@@ -161,18 +160,20 @@ const App: Component = () => {
 								})
 							}
 						/>
-					</label>
+					</fieldset>
 				)}
-				Background Color
-				{/* @todo support alpha channels on bg colors */}
-				<ColorSelection
-					disableTransparency={!allowsTransparency()}
-					defaultValue="#cc3333"
-					onchange={bg => adjustOuputSetting({bg})}
-					value={actingBg()}
-				/>
-				{!allowsTransparency() &&
-					`Note: ${outputSettings().ext} files do not support transparency.`}
+				<fieldset>
+					<legend>Background Color</legend>
+					{/* @todo support alpha channels on bg colors */}
+					<ColorSelection
+						disableTransparency={!allowsTransparency()}
+						defaultValue="#cc3333"
+						onchange={bg => adjustOuputSetting({bg})}
+						value={actingBg()}
+					/>
+					{!allowsTransparency() &&
+						`Note: ${outputSettings().ext} files do not support transparency.`}
+				</fieldset>
 			</aside>
 			<style>{`[data-part="dropzone"]{background: ${iconBg()}}`}</style>
 			<FileUpload.RootProvider value={fileUpload}>
@@ -183,24 +184,23 @@ const App: Component = () => {
 					<div>
 						<label for="output-format" onclick={event => event.stopPropagation()}>
 							Convert To
+							<select
+								id="output-format"
+								onclick={event => event.stopPropagation()}
+								onchange={event =>
+									adjustOuputSetting({ext: event.target.value as IExt})
+								}
+								value={outputSettings().ext}
+							>
+								<For each={supportedFormats().filter(format => format.output)}>
+									{format => (
+										<option selected={format.ext === outputSettings().ext}>
+											{format.ext}
+										</option>
+									)}
+								</For>
+							</select>
 						</label>
-						<br />
-						<select
-							id="output-format"
-							onclick={event => event.stopPropagation()}
-							onchange={event =>
-								adjustOuputSetting({ext: event.target.value as IExt})
-							}
-							value={outputSettings().ext}
-						>
-							<For each={supportedFormats().filter(format => format.output)}>
-								{format => (
-									<option selected={format.ext === outputSettings().ext}>
-										{format.ext}
-									</option>
-								)}
-							</For>
-						</select>
 					</div>
 				</FileUpload.Dropzone>
 				<FileUpload.HiddenInput />
