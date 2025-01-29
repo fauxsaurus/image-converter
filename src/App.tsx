@@ -145,6 +145,20 @@ const App: Component = () => {
 						px
 					</div>
 				</fieldset>
+				<fieldset>
+					{/* @todo add tooltips here to indicate that this just replaces transparent pixels with the chosen bg color. */}
+					<legend>Background Color</legend>
+					{/* @todo support alpha channels on bg colors */}
+					<ColorSelection
+						disableTransparency={!allowsTransparency()}
+						defaultValue="#ff3333"
+						onchange={bg => adjustOuputSetting({bg})}
+						value={actingBg()}
+					/>
+					{!allowsTransparency() && (
+						<div class="notice">{`Note: ${outputSettings().ext.toLocaleUpperCase()} files do not support transparency.`}</div>
+					)}
+				</fieldset>
 				{/* @ts-ignore it is fine to access a potentially non-existent property here */}
 				{!!formatMetadata[outputSettings().ext]?.compressible && (
 					<fieldset>
@@ -162,18 +176,6 @@ const App: Component = () => {
 						/>
 					</fieldset>
 				)}
-				<fieldset>
-					<legend>Background Color</legend>
-					{/* @todo support alpha channels on bg colors */}
-					<ColorSelection
-						disableTransparency={!allowsTransparency()}
-						defaultValue="#cc3333"
-						onchange={bg => adjustOuputSetting({bg})}
-						value={actingBg()}
-					/>
-					{!allowsTransparency() &&
-						`Note: ${outputSettings().ext} files do not support transparency.`}
-				</fieldset>
 			</aside>
 			<style>{`[data-part="dropzone"]{background: ${iconBg()}}`}</style>
 			<FileUpload.RootProvider value={fileUpload}>
