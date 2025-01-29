@@ -10,7 +10,6 @@ import {
 	IOutputSettings,
 	url2outputSettings,
 } from './lib/'
-import styles from './App.module.css'
 import {ColorSelection} from './color-select'
 
 const convert = async (output: IOutputSettings, file: File) => {
@@ -110,7 +109,71 @@ const App: Component = () => {
 	/** @todo +Privacy First Notice and intuative instructions with good SEO */
 	/** @todo add spanish localization */
 	return (
-		<div class={styles.App}>
+		<>
+			<header>
+				<h1>Image Converter</h1>
+			</header>
+			<aside>
+				<fieldset>
+					<legend>Output Resolution</legend>
+					<div class="row">
+						<label>
+							Width
+							<input
+								placeholder="auto"
+								type="number"
+								min="0"
+								value={outputSettings().width || undefined}
+								onInput={event =>
+									adjustOuputSetting({width: event.target.valueAsNumber})
+								}
+							/>
+						</label>
+						x
+						<label>
+							Height
+							<input
+								placeholder="auto"
+								type="number"
+								min="0"
+								value={outputSettings().height || undefined}
+								onInput={event =>
+									adjustOuputSetting({height: event.target.valueAsNumber})
+								}
+							/>
+						</label>
+						px
+					</div>
+				</fieldset>
+				<br />
+				{/* @ts-ignore it is fine to access a potentially non-existent property here */}
+				{!!formatMetadata[outputSettings().ext]?.compressible && (
+					<label>
+						Compression Quality{' '}
+						<input
+							type="number"
+							max="1"
+							min="0.01"
+							value={outputSettings().cq}
+							onInput={event =>
+								adjustOuputSetting({
+									cq: event.target.valueAsNumber,
+								})
+							}
+						/>
+					</label>
+				)}
+				Background Color
+				{/* @todo support alpha channels on bg colors */}
+				<ColorSelection
+					disableTransparency={!allowsTransparency()}
+					defaultValue="#cc3333"
+					onchange={bg => adjustOuputSetting({bg})}
+					value={actingBg()}
+				/>
+				{!allowsTransparency() &&
+					`Note: ${outputSettings().ext} files do not support transparency.`}
+			</aside>
 			<style>{`[data-part="dropzone"]{background: ${iconBg()}}`}</style>
 			<FileUpload.RootProvider value={fileUpload}>
 				<FileUpload.Dropzone>
@@ -142,62 +205,7 @@ const App: Component = () => {
 				</FileUpload.Dropzone>
 				<FileUpload.HiddenInput />
 			</FileUpload.RootProvider>
-			<br />
-			<span>
-				Note: If the values below are set to zero, the output resolution will default to the
-				input images' resolution.
-			</span>
-			<br />
-			<input
-				type="number"
-				min="0"
-				value={outputSettings().width}
-				onInput={event =>
-					adjustOuputSetting({
-						width: event.target.valueAsNumber,
-					})
-				}
-			/>{' '}
-			x{' '}
-			<input
-				type="number"
-				min="0"
-				value={outputSettings().height}
-				onInput={event =>
-					adjustOuputSetting({
-						height: event.target.valueAsNumber,
-					})
-				}
-			/>
-			<br />
-			{/* @ts-ignore it is fine to access a potentially non-existent property here */}
-			{!!formatMetadata[outputSettings().ext]?.compressible && (
-				<label>
-					Compression Quality{' '}
-					<input
-						type="number"
-						max="1"
-						min="0.01"
-						value={outputSettings().cq}
-						onInput={event =>
-							adjustOuputSetting({
-								cq: event.target.valueAsNumber,
-							})
-						}
-					/>
-				</label>
-			)}
-			Background Color
-			{/* @todo support alpha channels on bg colors */}
-			<ColorSelection
-				disableTransparency={!allowsTransparency()}
-				defaultValue="#cc3333"
-				onchange={bg => adjustOuputSetting({bg})}
-				value={actingBg()}
-			/>
-			{!allowsTransparency() &&
-				`Note: ${outputSettings().ext} files do not support transparency.`}
-		</div>
+		</>
 	)
 }
 
