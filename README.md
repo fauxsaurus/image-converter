@@ -1,6 +1,10 @@
 # Image Converter
 
-[![App icon showing an image icon overlaying another.](public/assets/icon.svg | =100x100)](https://fauxsaurus.github.io/image-converter/)
+[
+    <img src="public/assets/icon.svg" width="100px" alt="App icon showing an image icon overlaying another."/>
+](
+   https://fauxsaurus.github.io/image-converter/
+)
 
 A simple, privacy-focused [image converter](https://fauxsaurus.github.io/image-converter/) that uses client-side JavaScript[^1] to convert images locally without ever sending them to a server.
 
