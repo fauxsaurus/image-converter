@@ -1,34 +1,39 @@
-## Usage
+# Image Converter
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+[![App icon showing an image icon overlaying another.](public/assets/icon.svg | =100x100)](https://fauxsaurus.github.io/image-converter/)
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+A simple, privacy-focused [image converter](https://fauxsaurus.github.io/image-converter/) that uses client-side JavaScript[^1] to convert images locally without ever sending them to a server.
 
-```bash
-$ npm install # or pnpm install or yarn install
-```
+## Features
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+-   Simultaneous Image Conversions/Downloads. (Note: a `.zip` file will be downloaded if multiple files are opened, but a single image file will be downloaded if only one image is provided.)
+-   Transparent Background Replacement. (Note: This will not transform solid color backgrounds into a different color. Rather, all completely transparent pixels will be replaced with the selected background color.)
+-   Adjustable Compression Quality. JPEGs and WEBPs use [Lossy Compression](https://en.wikipedia.org/wiki/Lossy_compression) to drastically decrease file sizes at the cost of quality. _Typically_ there is no perceptible drop from the 70%-80% range, but that will vary from image to image--thus, said option is provided for relevant output formats.
 
-## Available Scripts
+## Output Format Support
 
-In the project directory, you can run:
+Support is based on open web standards. Thus, the following are currently[^2] available:
 
-### `npm run dev` or `npm start`
+-   JPEG
+-   PNG
+-   WEBP (for all [_non_-Safari browsers](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob#browser_compatibility), circa January 30th, 2025. Come on, Apple...)
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Input Format Support
 
-The page will reload if you make edits.<br>
+If a browser can open it, this app can convert it[^3]. Thus, _all_ of the following can be converted to _any_ of the supported output formats above.
 
-### `npm run build`
+Note: The app's background is dynamically generated based on input format support. Thus, if a given file format does not appear in the background, said browser cannot open it.
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+-   AVIF
+-   BMP
+-   GIF
+-   ICO[^4]
+-   JPEG
+-   PNG
+-   SVG
+-   WEBP
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+[^1]: Via the `canvas.toBlob()` API (see [docs](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob)).
+[^2]: _Technically_ Firefox also supports ICO outputs, but those are a can of worms (i.e., a single `.ico` file can contain _multiple_ images (at varying resolutions)), but that is non-standard and this is an 80:20 project that should already satisfy 99.99% of use cases. _But_, ICO support could [definitely be added](https://github.com/fauxsaurus/image-converter/issues/3).
+[^3]: _Technically_ Safari browsers support the HEIC format, but due to [licensing issues](https://caniuse.com/heif), said format is not widely adopted and is largely redundant with the advent of AVIF and JPEG XL. Thus, this app does not currently test for/allow that format, but that could [change in the future](https://github.com/fauxsaurus/image-converter/issues/4).
+[^4]: Note: As stated previously, ICO files can contain multiple images. Presumably, browsers select the largest one (or the one closest to the specified resolution), but I have not tested that and am uncertain of how the underlying process works, so your mileage may vary when generating `.ico` files.
