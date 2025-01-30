@@ -23,10 +23,10 @@ jobs:
                   BASE_PATH: /image-converter/
 
             - name: create .nojekyll
-              run: touch .output/public/.nojekyll
+              run: touch dist/.nojekyll
 
             - name: deploy pages
               uses: JamesIves/github-pages-deploy-action@v4.5.0
               with:
                   branch: gh-pages
-                  folder: .output/public
+                  folder: dist
