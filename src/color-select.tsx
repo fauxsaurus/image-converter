@@ -10,7 +10,8 @@ const PRESETS = ['transparent', '#ffffff', '#000000']
 
 export const ColorSelection = (props: IProps) => {
 	const pickColor = (newColor: string) => (event: Event) => (
-		event.preventDefault(), props.onchange(newColor)
+		event.preventDefault(),
+		props.onchange(newColor)
 	)
 
 	const customColor = () => (PRESETS.includes(props.value) ? props.defaultValue : props.value)
@@ -39,7 +40,7 @@ export const ColorSelection = (props: IProps) => {
 			>
 				<input
 					hidden
-					// @note the onclick handler is included because if the user clicks it to toggle the value, but does not change it in the popup, the default color will still be used to update the ouput image's background color
+					// @note the onclick handler is included because if the user clicks it to toggle the value, but does not change it in the popup, the default color will still be used to update the output image's background color
 					onclick={event => props.onchange(event.currentTarget.value)}
 					onchange={event => props.onchange(event.currentTarget.value)}
 					type="color"

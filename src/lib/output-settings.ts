@@ -31,8 +31,8 @@ const urlParams2json = (url: string) => {
 /** @returns a number within the bounds */
 const clamp = (min: number, max: number, value: number) => Math.min(Math.max(value, min), max)
 
-const getAvalue = <T>(allowedValues: T[], defualtValue: T, unknownValue: any): T =>
-	allowedValues.includes(unknownValue) ? (unknownValue as T) : defualtValue
+const getAValue = <T>(allowedValues: T[], defaultValue: T, unknownValue: any): T =>
+	allowedValues.includes(unknownValue) ? (unknownValue as T) : defaultValue
 
 const getInt = (defaultValue: number, value = '') => (value && parseInt(value)) || defaultValue
 const getFloat = (defaultValue: number, value = '') => (value && parseFloat(value)) || defaultValue
@@ -45,7 +45,7 @@ export const url2outputSettings = (url: string): IOutputSettings => {
 	const height = Math.max(getInt(DEFAULT_OUTPUT_SETTINGS.height, params.height), 0)
 	const width = Math.max(getInt(DEFAULT_OUTPUT_SETTINGS.width, params.width), 0)
 
-	const ext = getAvalue(EXTENSIONS, DEFAULT_OUTPUT_SETTINGS.ext, params.ext)
+	const ext = getAValue(EXTENSIONS, DEFAULT_OUTPUT_SETTINGS.ext, params.ext)
 
 	return {bg, cq, ext, height, width}
 }

@@ -10,7 +10,7 @@ const INPUT_TEST_STRINGS = {
 	// tiff: '',
 	webp: 'data:image/webp;base64,UklGRhACAABXRUJQVlA4WAoAAAAwAAAAAAAAAAAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZBTFBIAgAAAAAAVlA4IBgAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v02aAA=',
 }
-/** @todo add HEIC suppoert? image/heif (take the first frame of the video?) */
+/** @todo add HEIC support? image/heif (take the first frame of the video?) */
 /** @todo try to add ico support https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob#convert_a_canvas_to_an_ico_mozilla_only */
 export const formatMetadata = {
 	avif: {mimeType: 'image/avif', transparency: true},
@@ -65,5 +65,5 @@ export const getSupportedFileFormats = async (): Promise<IFormatSupport[]> =>
 			const output = isOutputSupported(ext)
 
 			return {ext, mimeType, compressible, transparency, input, output}
-		})
+		}),
 	)

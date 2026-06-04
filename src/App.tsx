@@ -13,20 +13,20 @@ import {
 import {ColorSelection} from './color-select'
 
 const convert = async (output: IOutputSettings, file: File) => {
-	/** @note this is an 80/20 line of code that will alter the base name of an extenionless file that used dots to spearate parts (e.g., file.name = '2025.01.23.13.07') */
+	/** @note this is an 80/20 line of code that will alter the base name of an extension-less file that used dots to separate parts (e.g., file.name = '2025.01.23.13.07') */
 	const newFileName = file.name.split('.').slice(0, -1).join('.') + `.${output.ext}`
 
 	// LOAD IMAGE
 	const src = URL.createObjectURL(file)
 	const img = await new Promise<Event>((onload, onerror) =>
-		Object.assign(document.createElement('img'), {onload, onerror, src})
+		Object.assign(document.createElement('img'), {onload, onerror, src}),
 	).then(event => event.currentTarget! as HTMLImageElement)
 	/** @todo add an error catcher and short circuit the function */
 
 	// input resolution
 	const iw = img.naturalWidth
 	const ih = img.naturalHeight
-	// ouput resolution
+	// output resolution
 	const ow = output.width || iw
 	const oh = output.height || ih
 
@@ -41,7 +41,7 @@ const convert = async (output: IOutputSettings, file: File) => {
 	// OUTPUT IMAGE
 	return (
 		new Promise<Blob | null>(callback =>
-			canvas.toBlob(callback, formatMetadata[output.ext].mimeType, output.cq)
+			canvas.toBlob(callback, formatMetadata[output.ext].mimeType, output.cq),
 		)
 			.then(blob => {
 				/** @todo do something here */
@@ -49,22 +49,22 @@ const convert = async (output: IOutputSettings, file: File) => {
 
 				return [newFileName, blob] as [string, Blob]
 			})
-			/** @tood catch security error, bitmap not origin clean https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob#exceptions */
+			/** @todo catch security error, bitmap not origin clean https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob#exceptions */
 			.finally(() => void URL.revokeObjectURL(src))
 	)
 }
 
 /** @todo allow transparent formats to change their background color with bg (in this case default to white if set to '' on jpeg) */
-/** @todo use https://web.dev/articles/offscreen-canvas to unlock better perfomance on the main thread (using it as a fallback in case it is not supported since the APIs are the same) */
+/** @todo use https://web.dev/articles/offscreen-canvas to unlock better performance on the main thread (using it as a fallback in case it is not supported since the APIs are the same) */
 const App: Component = () => {
 	const [showSettings, setShowSettings] = createSignal(false)
 
 	const [supportedFormats, setSupportedFormats] = createSignal<IFormatSupport[]>([])
 	const [outputSettings, setOutputSettings] = createSignal(
-		url2outputSettings(window.location.search)
+		url2outputSettings(window.location.search),
 	)
 
-	const adjustOuputSetting = (newProp: Partial<IOutputSettings>) =>
+	const adjustOutputSetting = (newProp: Partial<IOutputSettings>) =>
 		setOutputSettings(Object.assign({}, outputSettings(), newProp))
 
 	const fileUpload = useFileUpload({
@@ -80,7 +80,7 @@ const App: Component = () => {
 			const actingOutputSettings = Object.assign({}, outputSettings(), {bg: actingBg()})
 
 			await downloadFiles(
-				await Promise.all(files.map(file => convert(actingOutputSettings, file)))
+				await Promise.all(files.map(file => convert(actingOutputSettings, file))),
 			)
 		},
 	})
@@ -98,17 +98,17 @@ const App: Component = () => {
 		exts2cssBg(
 			supportedFormats()
 				.filter(format => format.input)
-				.map(format => format.ext)
+				.map(format => format.ext),
 		)
 
 	onMount(async () => void setSupportedFormats(await getSupportedFileFormats()))
 
 	/** @todo improve the convert to dropdown, put the label over the button (left aligned) and absolutely position them over the dropzone */
-	/** @todo  improve the resolution layout bit, improve compression quality with a tooltip, improve the backgrond color layout, sizing, color swatches, and make a clear indicator of an editable/custom color */
+	/** @todo  improve the resolution layout bit, improve compression quality with a tooltip, improve the background color layout, sizing, color swatches, and make a clear indicator of an editable/custom color */
 	/** @todo add drag and drop hover styles*/
 	/** @todo check accessibility on the image conversion (e.g., what file formats are supported? And do screen readers conveniently convey that?) */
 	/** @todo add error handling to all the async functions used */
-	/** @todo +Privacy First Notice and intuative instructions with good SEO */
+	/** @todo +Privacy First Notice and intuitive instructions with good SEO */
 	/** @todo add spanish localization */
 	return (
 		<main data-settings-menu={showSettings()}>
@@ -127,7 +127,7 @@ const App: Component = () => {
 								min="0"
 								value={outputSettings().width || undefined}
 								onInput={event =>
-									adjustOuputSetting({width: event.target.valueAsNumber})
+									adjustOutputSetting({width: event.target.valueAsNumber})
 								}
 							/>
 						</label>
@@ -140,7 +140,7 @@ const App: Component = () => {
 								min="0"
 								value={outputSettings().height || undefined}
 								onInput={event =>
-									adjustOuputSetting({height: event.target.valueAsNumber})
+									adjustOutputSetting({height: event.target.valueAsNumber})
 								}
 							/>
 						</label>
@@ -154,7 +154,7 @@ const App: Component = () => {
 					<ColorSelection
 						disableTransparency={!allowsTransparency()}
 						defaultValue="#ff3333"
-						onchange={bg => adjustOuputSetting({bg})}
+						onchange={bg => adjustOutputSetting({bg})}
 						value={actingBg()}
 					/>
 					{!allowsTransparency() && (
@@ -171,7 +171,7 @@ const App: Component = () => {
 							min="0.01"
 							value={outputSettings().cq}
 							onInput={event =>
-								adjustOuputSetting({
+								adjustOutputSetting({
 									cq: event.target.valueAsNumber,
 								})
 							}
@@ -192,7 +192,7 @@ const App: Component = () => {
 								id="output-format"
 								onclick={event => event.stopPropagation()}
 								onchange={event =>
-									adjustOuputSetting({ext: event.target.value as IExt})
+									adjustOutputSetting({ext: event.target.value as IExt})
 								}
 								value={outputSettings().ext}
 							>
