@@ -16,7 +16,7 @@ const convert = async (output: IOutputSettings, file: File) => {
 	/** @note this is an 80/20 line of code that will alter the base name of an extension-less file that used dots to separate parts (e.g., file.name = '2025.01.23.13.07') */
 	const newFileName = file.name.split('.').slice(0, -1).join('.') + `.${output.ext}`
 
-	// LOAD IMAGE
+	// # LOAD IMAGE
 	const src = URL.createObjectURL(file)
 	const img = await new Promise<Event>((onload, onerror) =>
 		Object.assign(document.createElement('img'), {onload, onerror, src}),
@@ -26,19 +26,22 @@ const convert = async (output: IOutputSettings, file: File) => {
 	// input resolution
 	const iw = img.naturalWidth
 	const ih = img.naturalHeight
-	// output resolution
+	// output resolution (defaults to original resolution if not specified)
 	const ow = output.width || iw
 	const oh = output.height || ih
 
-	// DRAW IMAGE
+	// # DRAW IMAGE
 	const canvas = Object.assign(document.createElement('canvas'), {width: ow, height: oh})
 	const context = canvas.getContext('2d')!
 
+	// apply selected background color
 	if (output.bg !== 'transparent')
 		Object.assign(context, {fillStyle: output.bg}).fillRect(0, 0, ow, oh)
+
+	// stretch/squash image to desired resolution
 	context.drawImage(img, 0, 0, iw, ih, 0, 0, ow, oh)
 
-	// OUTPUT IMAGE
+	// # OUTPUT IMAGE
 	return (
 		new Promise<Blob | null>(callback =>
 			canvas.toBlob(callback, formatMetadata[output.ext].mimeType, output.cq),
@@ -182,7 +185,7 @@ const App: Component = () => {
 			<style>{`[data-part="dropzone"]{background: ${iconBg()}}`}</style>
 			<FileUpload.RootProvider value={fileUpload}>
 				<FileUpload.Dropzone>
-					{/* if mobile, make this text transparent */}
+					{/* if mobile, make this text transparent (because dragging/dropping is not supported on mobile) */}
 					<FileUpload.Label>Drag and Drop File(s)</FileUpload.Label>
 					<FileUpload.Trigger>Choose Images(s)</FileUpload.Trigger>
 					<div>
